@@ -1,7 +1,7 @@
 {
-  "name": "localaddonapi",
+  "name": "localaddonapi2",
   "version": "1.0",
-  "slug": "localaddonapi",
+  "slug": "localaddonapi2",
   "description": "localdatabase v2 gateway on local database home assistant",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
   "startup": "application",
