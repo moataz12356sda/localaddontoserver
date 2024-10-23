@@ -297,6 +297,7 @@ def logic():
         else:
             print("Server error, retrying in 5 seconds...")
             time.sleep(30)
+        time.sleep(10)
 
         
 
