@@ -1,7 +1,7 @@
 {
   "name": "localaddontoserver",
   "version": "1.0",
-  "slug": "skarptW_api_to_server",
+  "slug": "localaddontoserver",
   "description": "localdatabase v2 gateway on local database home assistant",
   "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
   "startup": "application",
