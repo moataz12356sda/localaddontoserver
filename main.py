@@ -281,23 +281,33 @@ def Checked_SavedHolding_Database():
 
 def logic():
     while True:
-        # Test server connection before every operation
-        if test_server_connection('iot.skarpt.net'):
-            token = login()  # Attempt to log in and get a token
-            if token:  # Only proceed if login is successful
-                # Check if there are packets in the holding database
-                if Checked_SavedHolding_Database():
-                    # Send saved packets in a separate thread
-                    thread = threading.Thread(target=Send_Saved_Database)
-                    thread.start()
-                    thread.join()  # Ensure the thread completes before proceeding
+        try:
+            # Test server connection before every operation
+            if test_server_connection('iot.skarpt.net'):
+                token = login()  # Attempt to log in and get a token
+                if token:  # Only proceed if login is successful
+                    # Check if there are packets in the holding database
+                    if Checked_SavedHolding_Database():
+                        # Send saved packets in a separate thread
+                        thread = threading.Thread(target=Send_Saved_Database)
+                        thread.start()
+                        thread.join()  # Ensure the thread completes before proceeding
+                else:
+                    print("Login failed, retrying in 30 seconds...")
             else:
-                print("Login failed, retrying in 5 seconds...")
-                time.sleep(30)
-        else:
-            print("Server error, retrying in 5 seconds...")
-            time.sleep(30)
-        time.sleep(10)
+                print("Server error, retrying in 30 seconds...")
+        
+        except OSError as e:
+            if e.errno == 101:
+                print(f"Network is unreachable: {e}. Retrying in 30 seconds...")
+            else:
+                print(f"OSError occurred: {e}. Retrying in 30 seconds...")
+
+        except Exception as ex:
+            print(f"An unexpected error occurred: {ex}. Retrying in 30 seconds...")
+
+        # Ensure the code waits before retrying to avoid infinite loops without a delay
+        time.sleep(30)
 
         
 
