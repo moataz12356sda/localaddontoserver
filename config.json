@@ -1,5 +1,5 @@
 {
-  "name": "skarptW_api_to_server",
+  "name": "localaddontoserver",
   "version": "1.0",
   "slug": "skarptW_api_to_server",
   "description": "localdatabase v2 gateway on local database home assistant",
