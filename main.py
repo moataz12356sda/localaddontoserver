@@ -30,15 +30,21 @@ print(f"Password: {password}")
 
 
 
-# Load configuration from the Home Assistant add-on options file
-DATABASE_PORT = '8086'
-USERNAME_DATABASE = str(open("config/USERNAME_DATABASE.txt", "r").read()).strip()
-PASSWORD_DATABASE = str(open("config/PASSWORD_DATABASE.txt", "r").read()).strip()
-INTERNAL_BACKUP_DATABASE_NAME = str(open("config/INTERNAL_BACKUP_DATABASE_NAME.txt", "r").read()).strip()
-INTERNAL_DATABASE_NAME = str(open("config/INTERNAL_DATABASE_NAME.txt", "r").read()).strip()
-DATABASE_IP = str(open("config/DATABASE_IP.txt", "r").read()).strip()
-measurement = str(open("config/measurement.txt", "r").read()).strip()
+DATABASE_PORT = config.get('database_port', '8086')  # Default to '8086' if not set
+USERNAME_DATABASE = config.get('username_database', 'default_username')
+PASSWORD_DATABASE = config.get('password_database', 'default_password')
+INTERNAL_BACKUP_DATABASE_NAME = config.get('internal_backup_database_name', 'default_backup_db')
+INTERNAL_DATABASE_NAME = config.get('internal_database_name', 'default_internal_db')
+DATABASE_IP = config.get('database_ip', '127.0.0.1')
+measurement = config.get('measurement', 'default_measurement')
 
+print("Database Port:", DATABASE_PORT)
+print("Username:", USERNAME_DATABASE)
+print("Password:", PASSWORD_DATABASE)
+print("Backup DB Name:", INTERNAL_BACKUP_DATABASE_NAME)
+print("Internal DB Name:", INTERNAL_DATABASE_NAME)
+print("Database IP:", DATABASE_IP)
+print("Measurement:", measurement)
 
 
 
