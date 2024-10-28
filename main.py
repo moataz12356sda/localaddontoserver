@@ -212,7 +212,7 @@ def ConvertPacketToReadings(packet):
 
     readings = []
     for sensor_packet in Sensorhexlist:
-         print("packet hex ="+sensor_packet)
+        print("packet hex ="+sensor_packet)
         sensor_data = {
             "Sensorid": sensor_packet[0:8],
             "SensorBattary": int(sensor_packet[10:14], 16) / 1000,
