@@ -242,6 +242,7 @@ def Send_Saved_Database():
         success = False  # Initialize the success flag
 
         # Attempt to convert sensor data and send it to the server
+        print(point)
         success = ConvertPacketToReadings(str(point["Packet"]))
 
         if success:
