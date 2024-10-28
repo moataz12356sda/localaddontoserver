@@ -210,22 +210,6 @@ def ConvertPacketToReadings(packet):
         "packet": packet
     }
 
-    readings = []
-    for sensor_packet in Sensorhexlist:
-        print("packet hex ="+sensor_packet)
-        sensor_data = {
-            "Sensorid": sensor_packet[0:8],
-            "SensorBattary": int(sensor_packet[10:14], 16) / 1000,
-            "temperature": TempFun(sensor_packet[14:18]),
-            "humidity": HumFun(sensor_packet[18:20])
-        }
-        readings.append(sensor_data)
-        print(f"sensor {sensor_packet[0:8]} :", json_object)
-
-    # Add readings to the main JSON object
-    json_object["data"] = readings
-    print(sensorfound, NumberOfSensors, Sensorhexlist)
-
     # Send to the server
     if not SendJsonToServer(json_object):
         return False
@@ -242,7 +226,6 @@ def Send_Saved_Database():
         success = False  # Initialize the success flag
 
         # Attempt to convert sensor data and send it to the server
-        print(point)
         success = ConvertPacketToReadings(str(point["Packet"]))
 
         if success:
