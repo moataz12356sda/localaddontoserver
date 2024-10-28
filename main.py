@@ -7,12 +7,11 @@ import requests
 from urllib3.exceptions import InsecureRequestWarning
 from influxdb import InfluxDBClient
 import json
+
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 import socket
 
 token = ''
-
-
 
 # login_uri = 'http://192.168.100.104:9907/login'
 # add_readings_uri = 'http://192.168.100.104:9907/reports/addReadingsList'
@@ -27,8 +26,6 @@ password = config.get('password')
 
 print(f"Username: {userName}")
 print(f"Password: {password}")
-
-
 
 DATABASE_PORT = config.get('database_port', '8086')  # Default to '8086' if not set
 USERNAME_DATABASE = config.get('username_database', 'default_username')
@@ -45,7 +42,12 @@ print("Backup DB Name:", INTERNAL_BACKUP_DATABASE_NAME)
 print("Internal DB Name:", INTERNAL_DATABASE_NAME)
 print("Database IP:", DATABASE_IP)
 print("Measurement:", measurement)
-
+def Update_ACK(Packetindex):
+    packet_ack = '@ACK,' + Packetindex + '#'
+    packet_ack = packet_ack.encode('utf-8')
+    time_ack = "@UTC," + str(datetime.now())[:19] + "#"
+    time_ack = time_ack.encode('utf-8')
+    return [packet_ack, time_ack]
 
 
 
@@ -168,54 +170,114 @@ def HumFun(hum):
         return "Sensor error"
     return str(int(value, 2))
 
+#
+# def ConvertPacketToReadings(packet):
+#     # Initialize variables
+#     Sensorhexlist = []
+#     sensorfound = False
+#     NumberOfSensors = 0
+#
+#     # Extract gateway details from packet
+#
+#     Packetsensorlength = packet[76:80]
+#
+#     # Return if there are no sensors found
+#     if Packetsensorlength == "0000":
+#         return 0
+#     if int(Packetsensorlength, 16) != 0:
+#         sensorfound = True
+#         NumberOfSensors = int(packet[82:84], 16)
+#
+#         result = 0
+#         for i in range(NumberOfSensors):
+#             i = i + result
+#             Sensorhexlist.append(packet[86 + i:108 + i])
+#             result += 21
+#
+#     # Extract gateway information
+#     GatwayId = packet[24:40]
+#     RTC = packet[40:52]
+#     date, time = ConvertRTCtoTime(RTC)
+#
+#     GatewayBattary = int(packet[68:72], 16) / 100
+#     GatewayPower = int(packet[72:76], 16) / 100
+#
+#     # Create the JSON object
+#
+#
+# readings = []
+# json_object = {"GatewayId": GatwayId,
+#                "GatewayBattary": GatewayBattary,
+#                "GatewayPower": GatewayPower,
+#                "Date": date,
+#                "Time": time,
+#                "packet": packet}
+# for packet in SensorhexlistSensorhexlist:
+#     sensor_data = {
+#         "Sensorid": packet[0:8],
+#         "SensorBattary": int(packet[10:14], 16) / 1000,
+#         "temperature": TempFun(packet[14:18]),
+#         "humidity": HumFun(packet[18:20])
+#     }
+#     readings.append(sensor_data)
+#     print("sensor %s : " % packet[0:8], json_object)
+#
+# json_object["data"] = readings
+# # Send to the server
+# if not SendJsonToServer(json_object):
+#     return False
+#
+# return True
 
-def ConvertPacketToReadings(packet):
-    # Initialize variables
+def ConvertSensorsToReadings(GatwayId, date, time, GatewayBattary, GatewayPower, Sensorhexlist, packet):
+    readings = []
+    json_object = {"GatewayId": GatwayId,
+                   "GatewayBattary": GatewayBattary,
+                   "GatewayPower": GatewayPower,
+                   "Date": date,
+                   "Time": time,
+                   "packet": packet}
+    for packet in Sensorhexlist:
+        sensor_data = {
+            "Sensorid": packet[0:8],
+            "SensorBattary": int(packet[10:14], 16) / 1000,
+            "temperature": TempFun(packet[14:18]),
+            "humidity": HumFun(packet[18:20])
+        }
+        readings.append(sensor_data)
+        print("sensor %s : " % packet[0:8], json_object)
+
+    json_object["data"] = readings
+    if not SendJsonToServer(json_object):
+        return False
+    return True
+
+
+def ConvertPacketIntoElemets(packet):
     Sensorhexlist = []
-    sensorfound = False
-    NumberOfSensors = 0
 
-    # Extract gateway details from packet
-
-    Packetsensorlength = packet[76:80]
-
-    # Return if there are no sensors found
-    if Packetsensorlength == "0000":
-        return 0
-    if int(Packetsensorlength, 16) != 0:
-        sensorfound = True
-        NumberOfSensors = int(packet[82:84], 16)
-
-        result = 0
-        for i in range(NumberOfSensors):
-            i = i + result
-            Sensorhexlist.append(packet[86 + i:108 + i])
-            result += 21
-
-    # Extract gateway information
+    Packetindex = packet[-12:-8]
     GatwayId = packet[24:40]
+    print(GatwayId)
+    print(Packetindex)
+
     RTC = packet[40:52]
     date, time = ConvertRTCtoTime(RTC)
-
     GatewayBattary = int(packet[68:72], 16) / 100
     GatewayPower = int(packet[72:76], 16) / 100
 
-    # Create the JSON object
-    json_object = {
-        "GatewayId": GatwayId,
-        "GatewayBattary": GatewayBattary,
-        "GatewayPower": GatewayPower,
-        "Date": date,
-        "Time": time,
-        "packet": packet
-    }
+    tags_length = packet[76:80]
+    if tags_length == "0000":
+        return 0
 
-    # Send to the server
-    if not SendJsonToServer(json_object):
+    NumberOfSensors = int(packet[82:84], 16)
+    length_per_tag = int(packet[84:86], 16) * 2
+    for i in range(NumberOfSensors):
+        Sensorhexlist.append(packet[86 + (i * length_per_tag):108 + (i * length_per_tag)])
+
+    if not ConvertSensorsToReadings(GatwayId, date, time, GatewayBattary, GatewayPower, Sensorhexlist, packet):
         return False
-
-    return True
-
+    #return Update_ACK(str(int(Packetindex, 16)))
 
 def Send_Saved_Database():
     client = InfluxDBClient(DATABASE_IP, DATABASE_PORT, USERNAME_DATABASE, PASSWORD_DATABASE,
@@ -226,7 +288,7 @@ def Send_Saved_Database():
         success = False  # Initialize the success flag
 
         # Attempt to convert sensor data and send it to the server
-        success = ConvertPacketToReadings(str(point["Packet"]))
+        success = ConvertPacketIntoElemets(str(point["Packet"]))
 
         if success:
             # Only delete the packet if the conversion and sending were successful
@@ -264,6 +326,7 @@ def Checked_SavedHolding_Database():
     else:
         return False
 
+
 def logic():
     while True:
         try:
@@ -281,7 +344,7 @@ def logic():
                     print("Login failed, retrying in 30 seconds...")
             else:
                 print("Server error, retrying in 30 seconds...")
-        
+
         except OSError as e:
             if e.errno == 101:
                 print(f"Network is unreachable: {e}. Retrying in 30 seconds...")
@@ -293,9 +356,6 @@ def logic():
 
         # Ensure the code waits before retrying to avoid infinite loops without a delay
         time.sleep(30)
-
-        
-
 
 
 # Start the logic
