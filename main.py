@@ -211,6 +211,7 @@ def ConvertPacketToReadings(packet):
     }
 
     readings = []
+    print("packet hex ="+Sensorhexlist)
     for sensor_packet in Sensorhexlist:
         sensor_data = {
             "Sensorid": sensor_packet[0:8],
